@@ -6,6 +6,7 @@
 
 body {
   background: rgb(42, 41, 41);
+  overflow-x: hidden; 
 }
 
 #app {

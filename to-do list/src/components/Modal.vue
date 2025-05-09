@@ -16,7 +16,6 @@ function close() {
   <div v-if="isOpen" class="modal-overlay" @click.self="close">
     <div class="modal-content">
         <slot></slot>
-
     </div>
   </div>
 </template>

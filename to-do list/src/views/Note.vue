@@ -5,14 +5,9 @@ import IconCheck from '../components/icons/IconCheck.vue'
 
 <template>
     <div class="container">
-        <div>
-            <input v-model="title" placeholder="Título" class="note-title" />
-        </div>
-        <div>
-            <textarea v-model="content" placeholder="Conteúdo" class="note-content" />
-        </div>
-
-        <div class="div-iconcheck">
+        <input v-model="title" placeholder="Título" class="note-title" />
+        <textarea v-model="content" placeholder="Conteúdo" class="note-content"></textarea>
+        <div class="footer">
             <IconCheck />
         </div>
     </div>
@@ -20,11 +15,6 @@ import IconCheck from '../components/icons/IconCheck.vue'
 
 
 <style scoped>
-
-input,
-textarea {
-    color: white;
-}
 
 input {
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
@@ -34,37 +24,49 @@ textarea {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-input::placeholder,
-textarea::placeholder {
-  font-family: sans-serif; 
+.note-title::placeholder,
+.note-content::placeholder {
+    font-family: sans-serif;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
 }
 
 .note-title {
-    width: 100vw;
-    height: 6vh;
-    margin-top: 1vh;
+    flex: 0 0 auto;
     padding: 10px;
     font-size: 30px;
+    background: none;
+    border: none;
+    outline: none;
+    color: white;
 }
 
 .note-content {
-    margin-top: 1vh;
-    height: 83.2vh;
-    width: 100vw;
+    flex: 1;
+    padding: 10px;
     font-size: 18px;
-    padding: 5px;
-}
-
-.note-title, .note-content{
     background: none;
     border: none;
-    outline: 0;
+    outline: none;
+    resize: none;
+    color: white;
 }
 
-.div-iconcheck {
-    width: 100vw;
-    background: rgba(0, 0, 0, 0.541); /* Só afeta a div */
-    height: 8vh;
+.footer {
+    flex: 0 0 auto;
+    background: rgba(0, 0, 0, 0.541);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.icon-check {
+    margin: 7px 15px;
 }
 
 </style>

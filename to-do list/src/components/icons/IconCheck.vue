@@ -19,11 +19,9 @@
 <style scoped>
 
 .icon-check {
-  position: fixed;
-  right: 20px;
-  bottom: 1vh;
   color: rgb(13, 225, 207);
   cursor: pointer;
 }
+
 
 </style>

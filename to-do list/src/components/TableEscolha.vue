@@ -18,18 +18,10 @@ function escolher(view) {
             </thead>
             <tbody>
                 <tr @click="escolher('note')">
-                    <td>
-                        <RouterLink to="/note" class="no-link">
-                            Note
-                        </RouterLink>
-                    </td>
+                    <td class="no-link">Note</td>
                 </tr>
                 <tr @click="escolher('checklist')">
-                    <td>
-                        <RouterLink to="/checklist" class="no-link">
-                            Check-List
-                        </RouterLink>
-                    </td>
+                    <td class="no-link">Check-List</td>
                 </tr>
             </tbody>
         </table>

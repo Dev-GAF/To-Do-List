@@ -1,6 +1,15 @@
 <script setup>
 
 import IconWrapper from "../components/icons/IconWrapper.vue";
+import Modal from "../components/Modal.vue"
+
+import { ref } from 'vue'
+
+const isModalOpen = ref(false);
+
+function controlModal() {
+    isModalOpen.value = !isModalOpen.value;
+}
 
 </script>
 
@@ -16,7 +25,22 @@ import IconWrapper from "../components/icons/IconWrapper.vue";
                 tamanho=55
                 corFundo="none"
                 corIcone="White"
+                @click="controlModal"
             />
+
+            <Modal :isOpen="isModalOpen" @close="isModalOpen = false">
+                <div class="modal-content">
+                    <div>
+                        <h3>Digite sua Tarefa:</h3>
+                    </div>
+                    <div>
+                        <input type="text" name="task" id="task" placeholder="Digite sua tarefa aqui...">
+                    </div>
+                    <div class="div-button">
+                        <button>Adicionar</button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     </div>
 </template>
@@ -59,7 +83,7 @@ textarea {
     flex: 1;
     padding: 10px;
     font-size: 18px;
-    background: none;
+    background: transparent;
     border: none;
     outline: none;
     resize: none;
@@ -81,6 +105,58 @@ textarea {
 
 #teste {
     flex: 1;
+}
+
+.modal-content {
+    background-color: rgb(28, 29, 29);
+    border-radius: 30px;
+    padding: 50px;
+}
+
+.modal-content h3 {
+    font-size: 80px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#task {
+    width: 100%;
+    height: 3vh;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid rgb(104, 101, 101);
+    outline: none;
+    resize: none;
+    color: white;
+    margin-top: 30px;
+}
+
+#task::placeholder {
+    color: rgba(255, 255, 255, 0.727);
+    padding-left: 2px;
+}
+
+.div-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button {
+    margin-top: 30px;
+    padding: 12px 24px;
+    font-size: 16px;
+    color: white;
+    background: linear-gradient(135deg, #00d4ff, #0077ff);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+button:hover {
+    background: linear-gradient(135deg, #00aaff, #0055cc);
+    transform: scale(1.05);
 }
 
 </style>

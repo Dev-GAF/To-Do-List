@@ -28,21 +28,11 @@ function close() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5); /* Preto semi-transparente */
+  background: rgba(0, 0, 0, 0.5); 
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Garante que fique acima de tudo */
-}
-
-/* Conteúdo do modal */
-.modal-content {
-  padding: 50px;
-  border-radius: 10px;
-  max-width: 80%; /* Largura máxima */
-  max-height: 80vh; /* Altura máxima */
-  overflow-y: auto; /* Rolagem se o conteúdo for muito grande */
-  position: relative;
+  z-index: 1000; 
 }
 
 </style>

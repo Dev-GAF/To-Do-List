@@ -1,5 +1,25 @@
 <script setup>
-import IconCheck from '../components/icons/IconCheck.vue'
+
+import IconCheck from '../components/icons/IconCheck.vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useTarefaStore } from '@/stores/tarefaStore';
+
+const title = ref('');
+const content = ref('');
+
+const tarefaStore = useTarefaStore();
+const router = useRouter();
+
+function salvarNota() 
+{
+    if (title.value.trim() || content.value.trim()) 
+    {
+        tarefaStore.adicionarTarefa(title.value, content.value, 'nota');
+        router.push('/');
+    }
+}
+
 </script>
 
 
@@ -8,7 +28,7 @@ import IconCheck from '../components/icons/IconCheck.vue'
         <input v-model="title" placeholder="Título" class="note-title" />
         <textarea v-model="content" placeholder="Conteúdo" class="note-content"></textarea>
         <div class="footer">
-            <IconCheck />
+            <IconCheck @click="salvarNota"/>
         </div>
     </div>
 </template>

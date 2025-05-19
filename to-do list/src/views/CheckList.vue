@@ -1,16 +1,50 @@
 <script setup>
-
 import IconWrapper from "../components/icons/IconWrapper.vue";
-import Modal from "../components/Modal.vue"
+import Modal from "../components/Modal.vue";
 
-import { ref } from 'vue'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useTarefaStore } from '@/stores/tarefaStore';
 
+const title = ref('');
+const tasks = ref([]);
+const newTask = ref('');
 const isModalOpen = ref(false);
 
-function controlModal() {
+const tarefaStore = useTarefaStore();
+const router = useRouter();
+
+function controlModal() 
+{
     isModalOpen.value = !isModalOpen.value;
 }
 
+function addTask() 
+{
+    if (newTask.value.trim() !== '') {
+        tasks.value.push({ text: newTask.value, done: false });
+        newTask.value = '';
+        isModalOpen.value = false;
+    }
+}
+
+function salvarChecklist() 
+{
+    if (!title.value.trim()) {
+        alert('Digite um título antes de salvar.');
+        return;
+    }
+
+    if (tasks.value.length === 0) {
+        alert('Adicione pelo menos uma tarefa ao checklist.');
+        return;
+    }
+
+    const conteudo = tasks.value.map(t => `- [${t.done ? 'x' : ' '}] ${t.text}`).join('\n');
+
+    tarefaStore.adicionarTarefa(title.value, conteudo, 'checklist');
+    router.push('/');
+}
 </script>
 
 
@@ -18,7 +52,15 @@ function controlModal() {
     <div class="container">
         <input v-model="title" placeholder="Título" class="note-title" />
         <div id="teste">
-            
+            <ul class="task-list">
+                <li v-for="(task, index) in tasks" :key="index">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" v-model="task.done" />
+                        <span class="checkmark"></span>
+                        <span :class="{ done: task.done }">{{ task.text }}</span>
+                    </label>
+                </li>
+            </ul>
         </div>
         <div class="footer">
             <icon-wrapper 
@@ -28,16 +70,18 @@ function controlModal() {
                 @click="controlModal"
             />
 
+            <button @click="salvarChecklist">Salvar Checklist</button>
+
             <Modal :isOpen="isModalOpen" @close="isModalOpen = false">
                 <div class="modal-content">
                     <div>
                         <h3>Digite sua Tarefa:</h3>
                     </div>
                     <div>
-                        <input type="text" name="task" id="task" placeholder="Digite sua tarefa aqui...">
+                        <input type="text" name="task" id="task" placeholder="Digite sua tarefa aqui..." v-model="newTask">
                     </div>
                     <div class="div-button">
-                        <button>Adicionar</button>
+                        <button @click="addTask">Adicionar</button>
                     </div>
                 </div>
             </Modal>
@@ -127,11 +171,14 @@ textarea {
     outline: none;
     resize: none;
     color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
     margin-top: 30px;
 }
 
 #task::placeholder {
     color: rgba(255, 255, 255, 0.727);
+    font-family: sans-serif;
     padding-left: 2px;
 }
 
@@ -158,5 +205,30 @@ button:hover {
     background: linear-gradient(135deg, #00aaff, #0055cc);
     transform: scale(1.05);
 }
+
+.task-list {
+    list-style-type: none;
+    padding: 10px;
+    color: white;
+    font-size: 18px;
+}
+
+.task-list li {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.task-list input[type="checkbox"] {
+    margin-right: 10px;
+    accent-color: #00d4ff;
+}
+
+.done {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+
 
 </style>

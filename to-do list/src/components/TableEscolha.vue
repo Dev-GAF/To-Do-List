@@ -31,7 +31,7 @@ function escolher(view) {
 
 <style scoped>
 
-.table-conteiner {
+.table-container {
     margin: 20px;
 }
 

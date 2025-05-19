@@ -1,9 +1,9 @@
 <script setup>
+
 import IconWrapper from "../components/icons/IconWrapper.vue";
 import Modal from "../components/Modal.vue";
 
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { useTarefaStore } from '@/stores/tarefaStore';
 
 const title = ref('');
@@ -12,38 +12,28 @@ const newTask = ref('');
 const isModalOpen = ref(false);
 
 const tarefaStore = useTarefaStore();
-const router = useRouter();
 
-function controlModal() 
-{
+function controlModal() {
     isModalOpen.value = !isModalOpen.value;
 }
 
-function addTask() 
-{
+function addTask() {
+    if (!title.value.trim()) {
+        alert('Digite um título antes de adicionar uma tarefa.');
+        return;
+    }
+
     if (newTask.value.trim() !== '') {
-        tasks.value.push({ text: newTask.value, done: false });
+        const task = { text: newTask.value, done: false };
+        tasks.value.push(task);
+
+        // Também salva na Pinia
+        const conteudo = `- [ ] ${task.text}`;
+        tarefaStore.adicionarTarefa(title.value, conteudo, 'checklist');
+
         newTask.value = '';
         isModalOpen.value = false;
     }
-}
-
-function salvarChecklist() 
-{
-    if (!title.value.trim()) {
-        alert('Digite um título antes de salvar.');
-        return;
-    }
-
-    if (tasks.value.length === 0) {
-        alert('Adicione pelo menos uma tarefa ao checklist.');
-        return;
-    }
-
-    const conteudo = tasks.value.map(t => `- [${t.done ? 'x' : ' '}] ${t.text}`).join('\n');
-
-    tarefaStore.adicionarTarefa(title.value, conteudo, 'checklist');
-    router.push('/');
 }
 </script>
 
@@ -70,8 +60,6 @@ function salvarChecklist()
                 @click="controlModal"
             />
 
-            <button @click="salvarChecklist">Salvar Checklist</button>
-
             <Modal :isOpen="isModalOpen" @close="isModalOpen = false">
                 <div class="modal-content">
                     <div>
@@ -81,7 +69,7 @@ function salvarChecklist()
                         <input type="text" name="task" id="task" placeholder="Digite sua tarefa aqui..." v-model="newTask">
                     </div>
                     <div class="div-button">
-                        <button @click="addTask">Adicionar</button>
+                        <button @click="addTask" class="button-addTask">Adicionar</button>
                     </div>
                 </div>
             </Modal>
@@ -188,7 +176,7 @@ textarea {
     align-items: center;
 }
 
-button {
+.button-addTask {
     margin-top: 30px;
     padding: 12px 24px;
     font-size: 16px;
@@ -201,7 +189,7 @@ button {
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
-button:hover {
+.button-addTask:hover {
     background: linear-gradient(135deg, #00aaff, #0055cc);
     transform: scale(1.05);
 }

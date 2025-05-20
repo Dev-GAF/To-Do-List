@@ -4,6 +4,7 @@ import IconWrapper from "../components/icons/IconWrapper.vue";
 import Modal from "../components/Modal.vue";
 
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { useTarefaStore } from '@/stores/tarefaStore';
 
 const title = ref('');
@@ -12,6 +13,11 @@ const newTask = ref('');
 const isModalOpen = ref(false);
 
 const tarefaStore = useTarefaStore();
+const route = useRoute();
+
+if (route.query.title) {
+  title.value = String(route.query.title);
+}
 
 function controlModal() {
     isModalOpen.value = !isModalOpen.value;
@@ -35,6 +41,7 @@ function addTask() {
         isModalOpen.value = false;
     }
 }
+
 </script>
 
 

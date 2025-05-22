@@ -3,7 +3,6 @@ import { defineStore } from "pinia";
 export const useTarefaStore = defineStore('tarefa', {
     state: () => ({
         tarefas: [], // [{ id, titulo, conteudo, tipo, done }]
-        checklistTituloTemp: ''
     }),
     actions: {
         adicionarTarefa(titulo, conteudo = '', tipo = 'nota') {

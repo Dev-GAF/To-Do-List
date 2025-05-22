@@ -5,7 +5,7 @@ import Modal from "../components/Modal.vue";
 
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { useTarefaStore } from '@/stores/tarefaStore';
+import { useTarefaStore } from '@/store/tarefaStore';
 
 const title = ref('');
 const tasks = ref([]);

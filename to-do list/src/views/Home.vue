@@ -6,11 +6,11 @@ import { ref } from 'vue';
 import IconWrapper from '../components/icons/IconWrapper.vue';
 import TableEscolha from '../components/TableEscolha.vue';
 import Modal from '../components/Modal.vue';
+import TitleCheckListModal from '../components/TitleCheckListModal.vue';
 
 const isModalOpen = ref(false);
 const isTitleModalOpen = ref(false);
 const selectedView = ref('');
-const titleInput = ref('');
 
 const router = useRouter();
 
@@ -23,52 +23,40 @@ function handleEscolha(view) {
     } 
     else 
     {
-        router.push('/note');
+        router.push('note');
     }
 }
 
-function confirmTitleAndNavigate() {
-    const title = titleInput.value.trim();
-
-    if (title) {
-        router.push({ path: '/checklist', query: { title }})
-        isTitleModalOpen.value = false;
-        titleInput.value = ''
-    }
-    else {
-        alert('Digite um título para continuar.')
-    }
+function confirmTitleAndNavigate(title) {
+    router.push({ path: 'checklist', query: { title }})
+    isTitleModalOpen.value = false;
 }
 
 </script>
 
 <template> 
 
-    <div class="container">
+    <div class="page-wrapper">
         <header>
             <h1 id="title">To-Do List</h1>
         </header>
 
-        <main>
-            <IconWrapper
-                id="icon-add"
-                @click="isModalOpen = true"
-            />
+        <IconWrapper
+            id="icon-add"
+            @click="isModalOpen = true"
+        />
 
-            <Modal :isOpen="isModalOpen" @close="isModalOpen = false">
-                <TableEscolha @escolha="handleEscolha"/>
-            </Modal>
+        <Modal :isOpen="isModalOpen" @close="isModalOpen = false">
+            <TableEscolha @escolha="handleEscolha"/>
+        </Modal>
 
-            <Modal :isOpen="isTitleModalOpen" @close="isModalOpen = false">
-                <div class="modal-content">
-                    <h3>Digite o título da checklist:</h3>
-                    <input v-model="titleInput" placeholder="Título..."/>
-                    <button @click="confirmTitleAndNavigate">Confirmar</button>
-                </div>
-            </Modal>
-        </main>
+        <TitleCheckListModal 
+            :isOpen="isTitleModalOpen"
+            @close="isTitleModalOpen = false"
+            @confirm="confirmTitleAndNavigate"
+        />
     </div>
-
+    
 </template>
 
 
@@ -112,6 +100,7 @@ header {
     padding: 10px;
     font-size: 16px;
 }
+
 .modal-content button {
     padding: 10px;
     font-size: 16px;

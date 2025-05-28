@@ -5,7 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func RegisterCheckListRoutes(e *echo.Echo) {
+func RegisterChecklistRoutes(e *echo.Echo) {
 	checklist := e.Group("/checklists")
 
 	checklist.GET("", controllers.ListarChecklists)           // GET /checklists

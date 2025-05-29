@@ -16,6 +16,24 @@ func ListarNotas(c echo.Context) error {
 	return c.JSON(http.StatusOK, notas)
 }
 
+// GET: Listar nota pelo id
+func ListarNotaId(c echo.Context) error {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID inválido"})
+	}
+
+	for _, nota := range notas {
+		if nota.ID == id {
+			return c.JSON(http.StatusOK, nota)
+		}
+	}
+
+	return c.JSON(http.StatusNotFound, map[string]string{"error": "Nota não encontrada"})
+}
+
 // POST: Criar nova nota
 func CriarNota(c echo.Context) error {
 	var nota models.Nota
@@ -39,10 +57,10 @@ func AtualizarNota(c echo.Context) error {
 	if err := c.Bind(&atualizada); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+	atualizada.ID = id
 
 	for i, n := range notas {
 		if n.ID == id {
-			atualizada.ID = id
 			notas[i] = atualizada
 			return c.JSON(http.StatusOK, atualizada)
 		}

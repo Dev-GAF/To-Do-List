@@ -1,22 +1,57 @@
 <script setup>
 
 import IconCheck from '../components/icons/IconCheck.vue';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useTarefaStore } from '@/store/tarefaStore';
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+// import { useTarefaStore } from '@/store/tarefaStore';
+import api from '@/services/api';
 
 const title = ref('');
 const content = ref('');
 
-const tarefaStore = useTarefaStore();
+// const tarefaStore = useTarefaStore();
 const router = useRouter();
+const route = useRoute();
 
-function salvarNota() 
+const id = route.params.id;;
+
+onMounted(async () => {
+    if (id) 
+    {
+        const { data } = await api.get(`/notas/${id}`);
+        title.value = data.titulo;
+        content.value = data.conteudo;
+    }
+});
+
+async function salvarNota() 
 {
     if (title.value.trim() || content.value.trim()) 
     {
-        tarefaStore.adicionarTarefa(title.value, content.value, 'nota');
-        router.push({ name: 'home' });
+        try 
+        {
+            if (id) 
+            {
+                await api.put(`/notas/${id}`, {
+                    id: id,
+                    titulo: title.value,
+                    conteudo: content.value
+                });
+            } 
+            else 
+            {
+                await api.post('/notas', {
+                    titulo: title.value,
+                    conteudo: content.value
+                });
+            }
+
+            router.push({ name: 'home' });
+        } 
+        catch (error) 
+        {
+            console.error('Erro ao salvar nota', error);
+        }
     }
 }
 

@@ -1,18 +1,32 @@
 <script setup>
 
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ref } from 'vue';
+
+import api from '@/services/api'
 
 import IconWrapper from '../components/icons/IconWrapper.vue';
 import TableEscolha from '../components/TableEscolha.vue';
 import Modal from '../components/Modal.vue';
 import TitleCheckListModal from '../components/TitleCheckListModal.vue';
 
+import Card from '@/components/Card.vue';
+
 const isModalOpen = ref(false);
 const isTitleModalOpen = ref(false);
 const selectedView = ref('');
 
 const router = useRouter();
+const notas = ref([]);
+
+onMounted(async () => {
+    const { data } = await api.get('/notas');
+    notas.value = data;
+})
+
+function abrirNota(nota) {
+    router.push({ name: 'note', params: { id: nota.id } });
+}
 
 function handleEscolha(view) {
     if (view === 'checklist') 
@@ -54,6 +68,13 @@ function confirmTitleAndNavigate(title) {
             :isOpen="isTitleModalOpen"
             @close="isTitleModalOpen = false"
             @confirm="confirmTitleAndNavigate"
+        />
+
+        <Card
+            v-for="nota in notas"
+            :key="nota.id"
+            :card="nota"
+            @abrirCard="abrirNota"
         />
     </div>
     

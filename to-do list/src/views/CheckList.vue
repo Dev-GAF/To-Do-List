@@ -5,14 +5,16 @@ import Modal from "../components/Modal.vue";
 
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { useTarefaStore } from '@/store/tarefaStore';
+// import { useTarefaStore } from '@/store/tarefaStore';
+
+import api from '@/services/api'
 
 const title = ref('');
 const tasks = ref([]);
 const newTask = ref('');
 const isModalOpen = ref(false);
 
-const tarefaStore = useTarefaStore();
+// const tarefaStore = useTarefaStore();
 const route = useRoute();
 
 if (route.query.title) {
@@ -23,22 +25,55 @@ function controlModal() {
     isModalOpen.value = !isModalOpen.value;
 }
 
-function addTask() {
+async function addTask() {
     if (!title.value.trim()) {
         alert('Digite um título antes de adicionar uma tarefa.');
         return;
     }
 
     if (newTask.value.trim() !== '') {
-        const task = { text: newTask.value, done: false };
-        tasks.value.push(task);
+        // const task = { text: newTask.value, done: false };
+        // tasks.value.push(task);
 
-        // Também salva na Pinia
-        const conteudo = `- [ ] ${task.text}`;
-        tarefaStore.adicionarTarefa(title.value, conteudo, 'checklist');
+        // // Também salva na Pinia
+        // const conteudo = `- [ ] ${task.text}`;
+        // tarefaStore.adicionarTarefa(title.value, conteudo, 'checklist');
 
-        newTask.value = '';
-        isModalOpen.value = false;
+        // newTask.value = '';
+        // isModalOpen.value = false;
+
+        const task = {
+            id: Date.now(),
+            titulo: newTask.value,
+            feito: false
+        }
+
+        try 
+        {
+            const { data: checklists } = await api.get('/checklists');
+            const existente = checklists.find(c => c.titulo == title.value);
+
+            if (existente) 
+            {
+                existente.items.push(task);
+                await api.put(`/checklists/${existente.id}`, existente)
+                tasks.value = [...existente.items];
+            } 
+            else 
+            {
+                const novoChecklist = {
+                    titulo: title.value,
+                    items: [task]
+                };
+                const { data } = await api.post('/checklists', novoChecklist);
+                tasks.value = [...data.items];
+            }
+
+            newTask.value = '';
+            isModalOpen.value = false;
+        } catch (error) {
+            console.error('Erro ao salvar checklist:', error);
+        }
     }
 }
 
@@ -61,7 +96,7 @@ function addTask() {
         </div>
         <div class="footer">
             <icon-wrapper 
-                tamanho=55
+                :tamanho="55"
                 corFundo="none"
                 corIcone="White"
                 @click="controlModal"

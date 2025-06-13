@@ -20,12 +20,19 @@ const router = useRouter();
 const notas = ref([]);
 
 onMounted(async () => {
-    const { data } = await api.get('/notas');
-    notas.value = data;
-})
+    const resNotas = await api.get('/notas');
+    const resChecklists = await api.get('/checklists');
 
-function abrirNota(nota) {
-    router.push({ name: 'note', params: { id: nota.id } });
+    // Juntando os dois tipos:
+    notas.value = [...resNotas.data, ...resChecklists.data];
+});
+
+function abrirNota(nota) 
+{
+    if (nota.items) 
+        router.push({ path: 'checklist', query: { title: nota.titulo } });
+    else 
+        router.push({ name: 'note', params: { id: nota.id } });
 }
 
 function handleEscolha(view) {
@@ -126,6 +133,14 @@ header {
     padding: 10px;
     font-size: 16px;
     cursor: pointer;
+}
+
+.page-wrapper {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 16px; 
+    justify-content: flex-start; 
+    padding: 20px; 
 }
 
 </style>

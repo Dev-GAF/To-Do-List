@@ -12,7 +12,7 @@ func main() {
 
 	// Middleware CORS
     e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-        AllowOrigins: []string{"http://localhost:5173"},
+        AllowOrigins: []string{"http://localhost:5174"},
         AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
     }))
 

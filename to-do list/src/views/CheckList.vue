@@ -1,69 +1,58 @@
 <script setup>
-
 import IconWrapper from "../components/icons/IconWrapper.vue";
 import Modal from "../components/Modal.vue";
-
-import { ref } from 'vue';
-import { useRoute } from 'vue-router';
-// import { useTarefaStore } from '@/store/tarefaStore';
-
-import api from '@/services/api'
+import { ref, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import api from '@/services/api';
 
 const title = ref('');
 const tasks = ref([]);
 const newTask = ref('');
 const isModalOpen = ref(false);
 
-// const tarefaStore = useTarefaStore();
 const route = useRoute();
+const router = useRouter();
 
-if (route.query.title) {
-  title.value = String(route.query.title);
-}
+if (route.query.title) 
+    title.value = String(route.query.title);
 
-function controlModal() {
+function controlModal() 
+{
     isModalOpen.value = !isModalOpen.value;
 }
 
-async function addTask() {
-    if (!title.value.trim()) {
+async function addTask() 
+{
+    if (!title.value.trim()) 
+    {
         alert('Digite um título antes de adicionar uma tarefa.');
         return;
     }
 
-    if (newTask.value.trim() !== '') {
-        // const task = { text: newTask.value, done: false };
-        // tasks.value.push(task);
-
-        // // Também salva na Pinia
-        // const conteudo = `- [ ] ${task.text}`;
-        // tarefaStore.adicionarTarefa(title.value, conteudo, 'checklist');
-
-        // newTask.value = '';
-        // isModalOpen.value = false;
-
+    if (newTask.value.trim() !== '') 
+    {
         const task = {
             id: Date.now(),
             titulo: newTask.value,
             feito: false
-        }
+        };
 
         try 
         {
-            const { data: checklists } = await api.get('/checklists');
-            const existente = checklists.find(c => c.titulo == title.value);
+            const { data } = await api.get('/checklists');
+            const checklists = Array.isArray(data) ? data : [];
+            const existente = checklists.find(c => c.titulo === title.value);
 
             if (existente) 
             {
                 existente.items.push(task);
-                await api.put(`/checklists/${existente.id}`, existente)
+                await api.put(`/checklists/${existente.id}`, existente);
                 tasks.value = [...existente.items];
-            } 
-            else 
+            } else 
             {
                 const novoChecklist = {
-                    titulo: title.value,
-                    items: [task]
+                titulo: title.value,
+                items: [task]
                 };
                 const { data } = await api.post('/checklists', novoChecklist);
                 tasks.value = [...data.items];
@@ -71,9 +60,62 @@ async function addTask() {
 
             newTask.value = '';
             isModalOpen.value = false;
-        } catch (error) {
+        } catch (error) 
+        {
             console.error('Erro ao salvar checklist:', error);
         }
+    }
+}
+
+async function carregarTarefas() {
+    try {
+        const { data } = await api.get('/checklists');
+        const checklists = Array.isArray(data) ? data : [];
+        const existente = checklists.find(c => c.titulo === title.value);
+        if (existente) {
+            tasks.value = [...existente.items];
+        } else {
+            tasks.value = [];
+        }
+    } catch (error) {
+        console.error('Erro ao carregar tarefas:', error);
+    }
+}
+
+onMounted(async () => {
+    if (title.value) 
+        await carregarTarefas();
+});
+
+// Watch para salvar ao marcar/desmarcar
+watch(tasks, () => {
+    atualizarChecklist();
+}, { deep: true });
+
+watch(() => route.query.title, async (novoTitulo) => {
+    if (novoTitulo) 
+    {
+        title.value = novoTitulo;
+        await carregarTarefas();
+    }
+});
+
+async function atualizarChecklist() 
+{
+    try 
+    {
+        const { data } = await api.get('/checklists');
+        const checklists = Array.isArray(data) ? data : [];
+        const existente = checklists.find(c => c.titulo === title.value);
+
+        if (existente) 
+        {
+            existente.items = [...tasks.value];
+            await api.put(`/checklists/${existente.id}`, existente);
+        }
+    } catch (error) 
+    {
+        console.error('Erro ao atualizar checklist:', error);
     }
 }
 
@@ -87,9 +129,9 @@ async function addTask() {
             <ul class="task-list">
                 <li v-for="(task, index) in tasks" :key="index">
                     <label class="custom-checkbox">
-                        <input type="checkbox" v-model="task.done" />
-                        <span class="checkmark"></span>
-                        <span :class="{ done: task.done }">{{ task.text }}</span>
+                    <input type="checkbox" v-model="task.feito" />
+                    <span class="checkmark"></span>
+                    <span :class="{ done: task.feito }">{{ task.titulo }}</span>
                     </label>
                 </li>
             </ul>

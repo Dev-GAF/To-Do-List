@@ -35,7 +35,8 @@ function abrirNota(nota)
         router.push({ name: 'note', params: { id: nota.id } });
 }
 
-function handleEscolha(view) {
+function handleEscolha(view) 
+{
     if (view === 'checklist') 
     {
         selectedView.value = 'checklist';
@@ -48,41 +49,65 @@ function handleEscolha(view) {
     }
 }
 
-function confirmTitleAndNavigate(title) {
+function confirmTitleAndNavigate(title) 
+{
     router.push({ path: 'checklist', query: { title }})
     isTitleModalOpen.value = false;
+}
+
+async function deletarNota(nota)
+{
+    if (!confirm(`Deseja realmente excluir "${nota.titulo}"?`)) return;
+
+    try 
+    {
+        const rota = nota.items ? `/checklists/${nota.id}` : `/notas/${nota.id}`;
+
+        await api.delete(rota);
+
+        notas.value = notas.value.filter(n => n.id !== nota.id);
+        
+    } 
+    catch (error) 
+    {
+        console.error('Erro ao deletar:', error);
+        alert('Erro ao deletar item');
+    }
 }
 
 </script>
 
 <template> 
 
-    <div class="page-wrapper">
+    <div>
         <header>
             <h1 id="title">To-Do List</h1>
         </header>
 
-        <IconWrapper
-            id="icon-add"
-            @click="isModalOpen = true"
-        />
+        <div class="page-wrapper">
+            <IconWrapper
+                id="icon-add"
+                @click="isModalOpen = true"
+            />
 
-        <Modal :isOpen="isModalOpen" @close="isModalOpen = false">
-            <TableEscolha @escolha="handleEscolha"/>
-        </Modal>
+            <Modal :isOpen="isModalOpen" @close="isModalOpen = false">
+                <TableEscolha @escolha="handleEscolha"/>
+            </Modal>
 
-        <TitleCheckListModal 
-            :isOpen="isTitleModalOpen"
-            @close="isTitleModalOpen = false"
-            @confirm="confirmTitleAndNavigate"
-        />
+            <TitleCheckListModal 
+                :isOpen="isTitleModalOpen"
+                @close="isTitleModalOpen = false"
+                @confirm="confirmTitleAndNavigate"
+            />
 
-        <Card
-            v-for="nota in notas"
-            :key="nota.id"
-            :card="nota"
-            @abrirCard="abrirNota"
-        />
+            <Card
+                v-for="nota in notas"
+                :key="nota.id"
+                :card="nota"
+                @abrirCard="abrirNota"
+                @deletarCard="deletarNota"
+            />
+        </div>
     </div>
     
 </template>
@@ -136,9 +161,10 @@ header {
 }
 
 .page-wrapper {
+    width: 100vw;
     display: flex;
     flex-wrap: wrap; 
-    gap: 16px; 
+    gap: 22px; 
     justify-content: flex-start; 
     padding: 20px; 
 }

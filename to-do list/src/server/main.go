@@ -1,13 +1,24 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"server/routes"
+	"server/database"
 
 	"github.com/labstack/echo/v4"
     "github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
+	// Inicializa conexão com o MongoDB
+	collection, err := database.ConexaoBD()
+	if err != nil {
+		log.Fatalf("Erro ao conectar ao MongoDB: %v", err)
+	}
+	fmt.Println("Conexão bem-sucedida com MongoDB:", collection.Name())
+
+	// Inicia Echo
 	e := echo.New()
 
 	// Middleware CORS
@@ -22,5 +33,7 @@ func main() {
 	routes.RegisterNotaRoutes(e)
 
 	// Inicia o servidor na porta 8080
-	e.Logger.Fatal(e.Start(":8080"))
+	if err := e.Start(":8080"); err != nil {
+		log.Fatalf("Erro ao iniciar servidor: %v", err)
+	}
 }

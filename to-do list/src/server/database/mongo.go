@@ -1,51 +1,47 @@
-package main
+package database
 
 import ( 
 	"context" 
 	"fmt" 
-	"log" 
 	"os" 
+	"time"
 
 	"github.com/joho/godotenv" 
 	"go.mongodb.org/mongo-driver/mongo" 
 	"go.mongodb.org/mongo-driver/mongo/options"
 ) 
 
-func main() {
-	Connect();
-}
-
-func Connect() *mongo.Collection {
-	// Localizar .evn
-    err := godotenv.Load("../../../../.env") 
-    if err != nil { 
-        log.Fatalf( "Erro ao carregar arquivo .env: %s" , err) 
-    }
+func ConexaoBD() (*mongo.Collection, error) {
+	// Localizar .env
+    err := godotenv.Load("../../../.env") 
+    if err != nil {
+		return nil, fmt.Errorf("erro ao carregar .env: %w", err)
+	}
 
 	// Obter valor de .env
     MONGODB_URI := os.Getenv("MONGODB_URI")
-
-	// Conectar ao banco de dados.
-	clientOption := options.Client().ApplyURI(MONGODB_URI) 
-	client, err := mongo.Connect(context.Background(), clientOption) 
-	if err != nil { 
-		log.Fatal(err) 
-	} 
-
-	// Verificar a conexão.
-	err = client.Ping(context.Background(), nil ) 
-	if err != nil { 
-		log.Fatal(err) 
-	} 
-
-	// Criar teste
-	collection := client.Database("testdb").Collection("test")
-	if err != nil {
-		log.Fatal(err)
+	if MONGODB_URI == "" {
+		return nil, fmt.Errorf("MONGODB_URI não definido no .env")
 	}
 
-	// Se tudo der certo, Conectado.
-	fmt.Println("Connected to db")
+	// Conectar ao banco de dados.
+	clientOptions := options.Client().ApplyURI(MONGODB_URI) 
+	
+	// Conexão
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao conectar ao MongoDB: %w", err)
+	}
 
-	return collection
+	// Verifica a conexão
+	if err := client.Ping(ctx, nil); err != nil {
+		return nil, fmt.Errorf("erro ao verificar conexão com MongoDB: %w", err)
+	}
+
+	// Retorna a coleção "test" do banco "testdb"
+	collection := client.Database("testdb").Collection("test")
+	return collection, nil
 }

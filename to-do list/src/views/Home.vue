@@ -23,7 +23,6 @@ onMounted(async () => {
     const resNotas = await api.get('/notas');
     const resChecklists = await api.get('/checklists');
 
-    // Juntando os dois tipos:
     notas.value = [...resNotas.data, ...resChecklists.data];
 });
 

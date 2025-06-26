@@ -10,6 +10,6 @@ type Checklist struct {
 
 type ChecklistItem struct {
 	ID     primitive.ObjectID  `json:"id" bson:"_id,omitempty"`
-	Titulo string 			   `json:"titulo" bson:"tarefa"`
+	Titulo string 			   `json:"titulo" bson:"titulo"`
 	Feito  bool   			   `json:"feito" bson:"feito"`
 }

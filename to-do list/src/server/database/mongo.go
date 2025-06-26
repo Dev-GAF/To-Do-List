@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 ) 
 
-func ConexaoBD() (*mongo.Collection, error) {
+func ConexaoBD() (*mongo.Client, error) {
 	// Localizar .env
     err := godotenv.Load("../../../.env") 
     if err != nil {
@@ -41,7 +41,6 @@ func ConexaoBD() (*mongo.Collection, error) {
 		return nil, fmt.Errorf("erro ao verificar conexão com MongoDB: %w", err)
 	}
 
-	// Retorna a coleção "test" do banco "testdb"
-	collection := client.Database("testdb").Collection("test")
-	return collection, nil
+	// collection := client.Database("testdb").Collection("test")
+	return client, nil
 }

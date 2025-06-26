@@ -32,7 +32,7 @@ async function salvarNota()
         {
             if (id) 
             {
-                await api.put(`/notas/${Number(id)}`, {
+                await api.put(`/notas/${id}`, {
                     titulo: title.value,
                     conteudo: content.value
                 });

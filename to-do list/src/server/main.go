@@ -3,27 +3,33 @@ package main
 import (
 	"fmt"
 	"log"
-	"server/routes"
 	"server/database"
+	"server/repositories"
+	"server/routes"
 
 	"github.com/labstack/echo/v4"
-    "github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	// Inicializa conexão com o MongoDB
-	collection, err := database.ConexaoBD()
+	client, err := database.ConexaoBD()
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao MongoDB: %v", err)
 	}
-	fmt.Println("Conexão bem-sucedida com MongoDB:", collection.Name())
+	fmt.Println("Conexão bem-sucedida com MongoDB:")
+
+	db := client.Database("testdb") // nome do banco
+
+	repositories.SetNotaCollection(db.Collection("notas"))
+	repositories.SetChecklistCollection(db.Collection("checklists"))
 
 	// Inicia Echo
 	e := echo.New()
 
 	// Middleware CORS
     e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-        AllowOrigins: []string{"http://localhost:5173"},
+        AllowOrigins: []string{"http://localhost:5174"},
         AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
     }))
 

@@ -2,85 +2,83 @@ package controllers
 
 import (
 	"net/http"
-	"time"
-	"strconv"
+	// "time"
+	// "strconv"
 
 	"github.com/labstack/echo/v4"
-	"server/models"
-)
 
-var notas []models.Nota
+	"server/models"
+	"server/repositories"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // GET: Listar todos as notas
 func ListarNotas(c echo.Context) error {
-	return c.JSON(http.StatusOK, notas)
-}
-
-// GET: Listar nota pelo id
-func ListarNotaId(c echo.Context) error {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	notas, err := repositories.ListarNotas()
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID inválido"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao buscar"})
 	}
 
-	for _, nota := range notas {
-		if nota.ID == id {
-			return c.JSON(http.StatusOK, nota)
-		}
-	}
-
-	return c.JSON(http.StatusNotFound, map[string]string{"error": "Nota não encontrada"})
+	return c.JSON(http.StatusOK, notas)
 }
 
 // POST: Criar nova nota
 func CriarNota(c echo.Context) error {
 	var nota models.Nota
 	if err := c.Bind(&nota); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Dados inválidos"})
 	}
-	nota.ID = int(time.Now().UnixNano() / 1e6) 
-	notas = append(notas, nota)
+
+	nota.ID = primitive.NewObjectID() // gera novo ObjectID para o MongoDB
+
+	err := repositories.CriarNota(nota)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao salvar"})
+	}
+
 	return c.JSON(http.StatusCreated, nota)
 }
 
 // PUT: Atualizar nota pelo ID
 func AtualizarNota(c echo.Context) error {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr) 
+	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID inválido"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID inválido"})
 	}
 
-	var atualizada models.Nota
-	if err := c.Bind(&atualizada); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	var notaAtualizada models.Nota
+	if err := c.Bind(&notaAtualizada); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
-	atualizada.ID = id
 
-	for i, n := range notas {
-		if n.ID == id {
-			notas[i] = atualizada
-			return c.JSON(http.StatusOK, atualizada)
-		}
+	if notaAtualizada.ID != primitive.NilObjectID && notaAtualizada.ID != objectID {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID do corpo diferente do ID da URL"})
 	}
-	return c.JSON(http.StatusNotFound, map[string]string{"error": "Nota não encontrada"})
+	notaAtualizada.ID = objectID
+
+	err = repositories.AtualizarNota(objectID, notaAtualizada)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao atualizar nota"})
+	}
+
+	return c.JSON(http.StatusOK, notaAtualizada)
 }
 
 // DELETE: Remover nota pelo ID
 func RemoverNota(c echo.Context) error {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)  // converter para int
+	objectID, err := primitive.ObjectIDFromHex(idStr) // strconv.Atoi(idStr)  // converter para int
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID inválido"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID inválido"})
 	}
 
-	for i, n := range notas {
-		if n.ID == id {
-			notas = append(notas[:i], notas[i+1:]...)
-			return c.JSON(http.StatusOK, map[string]string{"message": "Nota removida"})
-		}
+	err = repositories.RemoverNota(objectID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao remover nota"})
 	}
-	return c.JSON(http.StatusNotFound, map[string]string{"error": "Nota não encontrada"})
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Nota removida com sucesso"})
 }

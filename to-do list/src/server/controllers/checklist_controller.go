@@ -2,17 +2,27 @@ package controllers
 
 import (
 	"net/http"			 			// Para códigos de status HTTP (200, 404, etc.)
-	"strconv" 						// Conversão 
-	"time" 							// Para obter timestamps (como ID único)
+	// "strconv" 						// Conversão 
+	// "time" 							// Para obter timestamps (como ID único)
 
 	"github.com/labstack/echo/v4" 	// Framework Echo
 	"server/models" 				// Pacote interno
-)
+	"server/repositories"
 
-var checklists []models.Checklist
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // GET: Listar todos os checklists
 func ListarChecklists(c echo.Context) error {
+	checklists, err := repositories.ListarChecklists()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao buscar checklists"})
+	}
+
+	if checklists == nil {
+		checklists = []models.Checklist{}
+	}
+
 	return c.JSON(http.StatusOK, checklists)
 }
 
@@ -20,52 +30,60 @@ func ListarChecklists(c echo.Context) error {
 func CriarChecklist(c echo.Context) error {
 	var checklist models.Checklist
 	if err := c.Bind(&checklist); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Dados inválidos"})
 	}
-	// Gerar ID como int baseado no timestamp (milissegundos)
-	checklist.ID = int(time.Now().UnixNano() / 1e6)
-	checklists = append(checklists, checklist)
+
+	checklist.ID = primitive.NewObjectID()
+
+	for i := range checklist.Items {
+		checklist.Items[i].ID = primitive.NewObjectID()
+	}
+
+	err := repositories.CriarChecklist(checklist)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao salvar checklist"})
+	}
+
 	return c.JSON(http.StatusCreated, checklist)
 }
 
 // PUT: Atualizar checklist pelo ID
 func AtualizarChecklist(c echo.Context) error {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID inválido"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID inválido"})
 	}
 
-	var atualizado models.Checklist
-	if err := c.Bind(&atualizado); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	var checklistAtualizado models.Checklist
+	if err := c.Bind(&checklistAtualizado); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
 
-	for i, cl := range checklists {
-		if cl.ID == id {
-			atualizado.ID = id
-			checklists[i] = atualizado
-			return c.JSON(http.StatusOK, atualizado)
-		}
+	if checklistAtualizado.ID != objectID {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID do corpo diferente do ID da URL"})
 	}
 
-	return c.JSON(http.StatusNotFound, map[string]string{"error": "Checklist não encontrado"})
+	err = repositories.AtualizarChecklist(objectID, checklistAtualizado)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao atualizar checklist"})
+	}
+
+	return c.JSON(http.StatusOK, checklistAtualizado)
 }
 
 // DELETE: Remover checklist pelo ID
 func RemoverChecklist(c echo.Context) error {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	objectID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID inválido"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID inválido"})
 	}
 
-	for i, cl := range checklists {
-		if cl.ID == id {
-			checklists = append(checklists[:i], checklists[i+1:]...)
-			return c.JSON(http.StatusOK, map[string]string{"message": "Checklist removido"})
-		}
+	err = repositories.RemoverChecklist(objectID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao remover checklist"})
 	}
 
-	return c.JSON(http.StatusNotFound, map[string]string{"error": "Checklist não encontrado"})
+	return c.JSON(http.StatusOK, echo.Map{"message": "Checklist removido com sucesso"})
 }

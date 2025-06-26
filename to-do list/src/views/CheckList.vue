@@ -3,6 +3,9 @@ import IconWrapper from "../components/icons/IconWrapper.vue";
 import Modal from "../components/Modal.vue";
 import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+
+import { ObjectId } from 'bson';
+
 import api from '@/services/api';
 
 const title = ref('');
@@ -32,35 +35,48 @@ async function addTask()
     if (newTask.value.trim() !== '') 
     {
         const task = {
-            id: Date.now(),
             titulo: newTask.value,
             feito: false
         };
 
         try 
         {
+            // Pega todos os checklists para ver se já existe esse título
             const { data } = await api.get('/checklists');
             const checklists = Array.isArray(data) ? data : [];
             const existente = checklists.find(c => c.titulo === title.value);
 
             if (existente) 
             {
+                // Adiciona a nova tarefa na lista existente
                 existente.items.push(task);
-                await api.put(`/checklists/${existente.id}`, existente);
-                tasks.value = [...existente.items];
-            } else 
+                
+                // Atualiza no backend e recebe o checklist atualizado com IDs
+                const { data: atualizado } = await api.put(`/checklists/${existente.id}`, existente);
+                
+                // Atualiza as tasks no frontend com os dados do backend (contendo os IDs corretos)
+                tasks.value = [...atualizado.items];
+            } 
+            else 
             {
+                // Cria novo checklist
                 const novoChecklist = {
-                titulo: title.value,
-                items: [task]
+                    titulo: title.value,
+                    items: [task]
                 };
-                const { data } = await api.post('/checklists', novoChecklist);
-                tasks.value = [...data.items];
+
+                // Salva no backend e pega o checklist criado com IDs
+                const { data: criado } = await api.post('/checklists', novoChecklist);
+                
+                // Atualiza as tasks no frontend com os dados do backend (contendo os IDs corretos)
+                tasks.value = [...criado.items];
             }
 
+            // Limpa o input e fecha o modal
             newTask.value = '';
             isModalOpen.value = false;
-        } catch (error) 
+        } 
+        catch (error) 
         {
             console.error('Erro ao salvar checklist:', error);
         }
@@ -73,7 +89,11 @@ async function carregarTarefas() {
         const checklists = Array.isArray(data) ? data : [];
         const existente = checklists.find(c => c.titulo === title.value);
         if (existente) {
-            tasks.value = [...existente.items];
+            tasks.value = existente.items.map(item => ({
+                id: item.id,  
+                titulo: item.titulo,
+                feito: item.feito
+            }));
         } else {
             tasks.value = [];
         }
@@ -100,21 +120,22 @@ watch(() => route.query.title, async (novoTitulo) => {
     }
 });
 
-async function atualizarChecklist() 
-{
-    try 
-    {
+async function atualizarChecklist() {
+    try {
         const { data } = await api.get('/checklists');
         const checklists = Array.isArray(data) ? data : [];
         const existente = checklists.find(c => c.titulo === title.value);
 
-        if (existente) 
-        {
-            existente.items = [...tasks.value];
+        if (existente) {
+            existente.items = tasks.value.map(item => ({
+                id: item.id,  // chave correta, minúscula
+                titulo: item.titulo,
+                feito: item.feito
+            }));
+
             await api.put(`/checklists/${existente.id}`, existente);
         }
-    } catch (error) 
-    {
+    } catch (error) {
         console.error('Erro ao atualizar checklist:', error);
     }
 }
@@ -127,7 +148,7 @@ async function atualizarChecklist()
         <input v-model="title" placeholder="Título" class="note-title" />
         <div id="teste">
             <ul class="task-list">
-                <li v-for="(task, index) in tasks" :key="index">
+                <li v-for="task in tasks" :key="task.id">
                     <label class="custom-checkbox">
                     <input type="checkbox" v-model="task.feito" />
                     <span class="checkmark"></span>

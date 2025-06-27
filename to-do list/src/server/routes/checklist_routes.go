@@ -8,6 +8,7 @@ import (
 func RegisterChecklistRoutes(e *echo.Echo) {
 	checklist := e.Group("/checklists")
 
+	checklist.GET("/:id", controllers.ListarChecklistsPorId)  // GET /checklists/:id
 	checklist.GET("", controllers.ListarChecklists)           // GET /checklists
 	checklist.POST("", controllers.CriarChecklist)            // POST /checklists
 	checklist.PUT("/:id", controllers.AtualizarChecklist)     // PUT /checklists/:id

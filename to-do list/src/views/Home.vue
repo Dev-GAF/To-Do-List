@@ -19,6 +19,8 @@ const selectedView = ref('');
 const router = useRouter();
 const notas = ref([]);
 
+const isDeleting = ref(false);
+
 onMounted(async () => {
     const resNotas = await api.get('/notas');
     const resChecklists = await api.get('/checklists');
@@ -56,21 +58,29 @@ function confirmTitleAndNavigate(title)
 
 async function deletarNota(nota)
 {
+    if (isDeleting.value) return; // bloqueia delete se já está deletando
     if (!confirm(`Deseja realmente excluir "${nota.titulo}"?`)) return;
+
+    isDeleting.value = true;
+
+    const oldNotas = [...notas.value];
+
+    notas.value = notas.value.filter(n => n.id !== nota.id);
 
     try 
     {
         const rota = nota.items ? `/checklists/${nota.id}` : `/notas/${nota.id}`;
-
         await api.delete(rota);
-
-        notas.value = notas.value.filter(n => n.id !== nota.id);
-        
     } 
     catch (error) 
     {
+        notas.value = oldNotas;
         console.error('Erro ao deletar:', error);
         alert('Erro ao deletar item');
+    } 
+    finally 
+    {
+        isDeleting.value = false;
     }
 }
 

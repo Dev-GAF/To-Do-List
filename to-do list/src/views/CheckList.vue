@@ -84,11 +84,13 @@ async function addTask()
 }
 
 async function carregarTarefas() {
-    try {
+    try 
+    {
         const { data } = await api.get('/checklists');
         const checklists = Array.isArray(data) ? data : [];
         const existente = checklists.find(c => c.titulo === title.value);
-        if (existente) {
+        if (existente) 
+        {
             tasks.value = existente.items.map(item => ({
                 id: item.id,  
                 titulo: item.titulo,
@@ -97,7 +99,9 @@ async function carregarTarefas() {
         } else {
             tasks.value = [];
         }
-    } catch (error) {
+    } 
+    catch (error) 
+    {
         console.error('Erro ao carregar tarefas:', error);
     }
 }
@@ -106,6 +110,30 @@ onMounted(async () => {
     if (title.value) 
         await carregarTarefas();
 });
+
+async function atualizarChecklist() {
+    try 
+    {
+        const { data } = await api.get('/checklists');
+        const checklists = Array.isArray(data) ? data : [];
+        const existente = checklists.find(c => c.titulo === title.value);
+
+        if (existente) 
+        {
+            existente.items = tasks.value.map(item => ({
+                id: item.id,  // chave correta, minúscula
+                titulo: item.titulo,
+                feito: item.feito
+            }));
+
+            await api.put(`/checklists/${existente.id}`, existente);
+        }
+    } 
+    catch (error) 
+    {
+        console.error('Erro ao atualizar checklist:', error);
+    }
+}
 
 // Watch para salvar ao marcar/desmarcar
 watch(tasks, () => {
@@ -119,26 +147,6 @@ watch(() => route.query.title, async (novoTitulo) => {
         await carregarTarefas();
     }
 });
-
-async function atualizarChecklist() {
-    try {
-        const { data } = await api.get('/checklists');
-        const checklists = Array.isArray(data) ? data : [];
-        const existente = checklists.find(c => c.titulo === title.value);
-
-        if (existente) {
-            existente.items = tasks.value.map(item => ({
-                id: item.id,  // chave correta, minúscula
-                titulo: item.titulo,
-                feito: item.feito
-            }));
-
-            await api.put(`/checklists/${existente.id}`, existente);
-        }
-    } catch (error) {
-        console.error('Erro ao atualizar checklist:', error);
-    }
-}
 
 </script>
 

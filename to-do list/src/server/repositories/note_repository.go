@@ -18,7 +18,20 @@ func SetNotaCollection(coll *mongo.Collection) {
 	notaCollection = coll
 }
 
-func ListarNotas() ([]models.Nota, error) {
+func ObterNotaPorID(id primitive.ObjectID) (models.Nota, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var nota models.Nota
+	err := notaCollection.FindOne(ctx, bson.M{"_id": id}).Decode(&nota)
+	if err != nil {
+		return models.Nota{}, err
+	}
+
+	return nota, nil
+}
+
+func ObterNotas() ([]models.Nota, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

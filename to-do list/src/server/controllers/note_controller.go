@@ -13,9 +13,26 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GET: Listar todos as notas
-func ListarNotas(c echo.Context) error {
-	notas, err := repositories.ListarNotas()
+// GET: Obter nota por ID
+func ObterNotaPorID(c echo.Context) error {
+	idStr := c.Param("id")
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID inválido"})
+	}
+
+	nota, err := repositories.ObterNotaPorID(objectID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"error": "Nota não encontrada"})
+	}
+
+	return c.JSON(http.StatusOK, nota)
+}
+
+
+// GET: Obter todos as notas
+func ObterNotas(c echo.Context) error {
+	notas, err := repositories.ObterNotas()
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao buscar"})

@@ -8,11 +8,28 @@ import (
 	"github.com/labstack/echo/v4" 	// Framework Echo
 	"server/models" 				// Pacote interno
 	"server/repositories"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GET: Listar todos os checklists
+// GET: Obter checklist por id
+func ListarChecklistsPorId(c echo.Context) error {
+	idStr := c.Param("id")
+	objectID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID inválido"})
+	}
+
+	checklist, err := repositories.ListarChecklistsPorId(objectID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"error": "Checklist não encontrado"})
+	}
+
+	return c.JSON(http.StatusOK, checklist)
+}
+
+// GET: Obter todos os checklists
 func ListarChecklists(c echo.Context) error {
 	checklists, err := repositories.ListarChecklists()
 	if err != nil {
@@ -36,8 +53,11 @@ func CriarChecklist(c echo.Context) error {
 	checklist.ID = primitive.NewObjectID()
 
 	for i := range checklist.Items {
-		checklist.Items[i].ID = primitive.NewObjectID()
+	if checklist.Items[i].ID == nil || checklist.Items[i].ID.IsZero() {
+		newID := primitive.NewObjectID()
+		checklist.Items[i].ID = &newID
 	}
+}
 
 	err := repositories.CriarChecklist(checklist)
 	if err != nil {
@@ -60,16 +80,19 @@ func AtualizarChecklist(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
 
-	if checklistAtualizado.ID != objectID {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": "ID do corpo diferente do ID da URL"})
-	}
+	checklistAtualizado.ID = objectID
 
-	err = repositories.AtualizarChecklist(objectID, checklistAtualizado)
+	checklistFinal, err := repositories.AtualizarChecklist(objectID, checklistAtualizado)
 	if err != nil {
+		if strings.Contains(err.Error(), "ID de item inválido") || 
+		   strings.Contains(err.Error(), "precisa de ID no corpo da requisição") {
+			return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
+		}
+		// Outros erros retornam 500
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Erro ao atualizar checklist"})
 	}
 
-	return c.JSON(http.StatusOK, checklistAtualizado)
+	return c.JSON(http.StatusOK, checklistFinal)
 }
 
 // DELETE: Remover checklist pelo ID

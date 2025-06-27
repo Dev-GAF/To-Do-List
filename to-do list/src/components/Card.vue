@@ -5,7 +5,7 @@ const props = defineProps({
     card: Object
 });
 
-const emit = defineEmits(['abrirCard']);
+const emit = defineEmits(['abrirCard', 'deletarCard']);
 
 function abrir() {
     emit('abrirCard', props.card);

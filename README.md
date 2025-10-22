@@ -1,3 +1,3 @@
 # To-Do-List
 
-## IN PROGRESS >>>
+## Stopped 🚫
